@@ -59,7 +59,7 @@ void loop() {
           debug("Retrying after GPS lost.\r\n");
         }
       }else{
-        Serial.println("GPS in SMS content, going ahead!\r\n");
+        debug("GPS in SMS content, going ahead!\r\n\r\n");
         newInSMS = true;
       }    
 
@@ -136,9 +136,12 @@ void waitForGPS(){
 
 
 void checkBattery(){
+    char ibuff[4];
     batteryLlevel = LBattery.level();
-    Serial.print("Battery level is ");
-    Serial.println(batteryLlevel);   
+    itoa(batteryLlevel, ibuff, 10);
+    debug("Battery level is ");
+    debug(ibuff);
+    debug("\r\n");
 }
 
 void debug(const char msg[])
