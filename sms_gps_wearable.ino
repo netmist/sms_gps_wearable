@@ -10,6 +10,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#define _DEBUG_MODE true
+
 //Indicators
 int batteryLlevel;
 
@@ -28,7 +30,7 @@ void setup() {
   failOutSMS = false;
   Serial.begin(115200);
   while(!Serial.available()); 
-  Serial.print("From SMS to GPS Wearable POC.\r\n");
+  debug("From SMS to GPS Wearable POC.\r\n");
   checkBattery();
   waitForGPS();
   Serial.flush();
@@ -46,25 +48,25 @@ void loop() {
     }
           
     sprintf(buffer, "Get new sms, content: %s, number: %s \r\n", buf_contex, rnum);
-    Serial.println(buffer);
+    debug(buffer);
           
     if((strcmp("GPS",(char*)buf_contex) == 0)||(newInSMS))
     {
       if(newInSMS){
         if(failOutSMS){
-          Serial.println("Retrying to send SMS.");
+          debug("Retrying to send SMS.\r\n");
         }else{
-          Serial.println("Retrying after GPS lost.");
+          debug("Retrying after GPS lost.\r\n");
         }
       }else{
-        Serial.println("GPS in SMS content, going ahead!");
+        Serial.println("GPS in SMS content, going ahead!\r\n");
         newInSMS = true;
       }    
 
       if(LGPS.check_online())
       {
-        sprintf(buffer, "Actual position: http://www.google.com/maps/place/%f,%f?hl=es", LGPS.get_latitude(), LGPS.get_longitude());
-        Serial.println(buffer);
+        sprintf(buffer, "Actual position: http://www.google.com/maps/place/%f,%f?hl=es\r\n", LGPS.get_latitude(), LGPS.get_longitude());
+        debug(buffer);
 /* - Hardcoded Begin - */  
   if(LSMS.ready())
   {
@@ -72,27 +74,26 @@ void loop() {
     LSMS.print(buffer);
                     
     if(LSMS.endSMS()){
-       Serial.println("SMS sent ok!");
-       
-       failOutSMS=false;
+      debug("SMS sent ok!\r\n");
+      failOutSMS=false;
     }else{
-      Serial.println("SMS send fail!");
-       failOutSMS=true;
+      debug("SMS send fail!\r\n");
+      failOutSMS=true;
     }
   }else{
-    Serial.println("SMS no ready!");
-       failOutSMS=true;
+    debug("SMS no ready!\r\n");
+    failOutSMS=true;
   }
 /* - Hardcoded End - */  
 
 // - Harcode replacement 
-//      failOutSMS = !sendSMS(buffer, rnum);
+//      failOutSMS = !sendSMS((char*)buffer, (char*)rnum);
 
         if(!failOutSMS){
           newInSMS = false;           
         }
       }else{
-        Serial.println("GPS Lost, retrying...");
+        debug("GPS Lost, retrying...\r\n");
         waitForGPS();
       }
     }
@@ -101,7 +102,7 @@ void loop() {
   delay(1000);
 }
 
-boolean sendSMS(char* content, char* number)
+boolean sendSMS(char *content, char *number)
 {
   if(LSMS.ready())
   {
@@ -109,14 +110,14 @@ boolean sendSMS(char* content, char* number)
     LSMS.print(content);
                     
     if(LSMS.endSMS()){
-       Serial.println("SMS sent ok!");
+       debug("SMS sent ok!\r\n");
        return true;
     }else{
-      Serial.println("SMS send fail!");
+      debug("SMS send fail!\r\n");
       return false;
     }
   }else{
-    Serial.println("SMS no ready!");
+    debug("SMS no ready!\r\n");
     return false;
   }
   
@@ -127,10 +128,10 @@ void waitForGPS(){
   
   while(!LGPS.check_online())
   {
-      Serial.print("\r\nWaiting for GPS...");
+      debug("\r\nWaiting for GPS...");
       delay(1000);
   }
-  Serial.println("FOUND!");
+  debug("FOUND!\r\n");
 }
 
 
@@ -138,4 +139,9 @@ void checkBattery(){
     batteryLlevel = LBattery.level();
     Serial.print("Battery level is ");
     Serial.println(batteryLlevel);   
+}
+
+void debug(const char msg[])
+{
+  if(_DEBUG_MODE)Serial.print(msg);
 }
